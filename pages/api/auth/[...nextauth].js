@@ -14,6 +14,17 @@ export default NextAuth({
   pages: {
     signIn: '/auth/signin',
   },
+  callbacks: {
+    async session({ session, token, user }) {
+      session.user.username = session.user.name
+        .split(' ')
+        .join('')
+        .toLowerCase()
+
+      session.user.userid = token.sub
+      return session
+    },
+  },
 
   /* theme: {
     logo: 'https://media-exp1.licdn.com/dms/image/C4E03AQF8MvX8VZxOzw/profile-displayphoto-shrink_200_200/0/1606846457796?e=1640822400&v=beta&t=AH8kKZvnTra0ePBoT_aFOGWbOdBG_c_-0iC3-eGY_LE',
