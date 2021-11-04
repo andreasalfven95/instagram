@@ -1,13 +1,12 @@
 import { getProviders, signIn as SignIntoProvider } from 'next-auth/react'
 import Header from '../../components/Header'
-import Image from 'next/image'
 
 const signIn = ({ providers }) => {
   return (
     <>
       <Header />
       <div className='flex flex-col items-center justify-center min-h-screen py-2 -mt-56 px-14 text-center'>
-        <Image
+        <img
           src='https://links.papareact.com/ocw'
           alt='instagram logo'
           className='w-80'
