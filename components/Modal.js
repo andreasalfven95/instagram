@@ -1,13 +1,61 @@
-import { useRecoilState } from 'recoil'
+import { Snapshot, useRecoilState } from 'recoil'
 import { modalState } from './../atoms/modalAtom'
 import { Dialog, Transition } from '@headlessui/react'
 import { Fragment, useRef, useState } from 'react'
 import { CameraIcon } from '@heroicons/react/outline'
+import { db, storage } from '../firebase'
+import {
+  addDoc,
+  collection,
+  doc,
+  serverTimestamp,
+  updateDoc,
+} from '@firebase/firestore'
+import { useSession } from 'next-auth/react'
+import { ref, getDownloadURL, uploadString } from '@firebase/storage'
 
 const Modal = () => {
+  const { data: session } = useSession()
   const [open, setOpen] = useRecoilState(modalState)
-  const filePickerRef = useRef()
+  const filePickerRef = useRef(null)
+  const captionRef = useRef(null)
   const [selectedFile, setSelectedFile] = useState(null)
+  const [loading, setLoading] = useState(false)
+
+  const uploadPost = async () => {
+    if (loading) return
+
+    setLoading(true)
+
+    //1 create a post and add to firestore
+    //2 get the post ID for the new post
+    //3 upload image to firebase storage with the post ID
+    //4 get a download URL from fb storage and update the original post with image
+
+    const docRef = await addDoc(collection(db, 'posts'), {
+      username: session.user.username,
+      caption: captionRef.current.value,
+      profileImg: session.user.image,
+      timestamp: serverTimestamp(),
+    })
+
+    console.log('New doc added with ID', docRef.id)
+
+    const imageRef = ref(storage, `posts/${docRef.id}/image`)
+
+    await uploadString(imageRef, selectedFile, 'data_url').then(
+      async (snapshot) => {
+        const dowloadURL = await getDownloadURL(imageRef)
+
+        await updateDoc(doc(db, 'posts', docRef.id), {
+          image: dowloadURL,
+        })
+      }
+    )
+    setOpen(false)
+    setLoading(false)
+    setSelectedFile(null)
+  }
 
   const addImageToPost = (e) => {
     const reader = new FileReader()
@@ -96,6 +144,7 @@ const Modal = () => {
                     </div>
                     <div className='mt-2'>
                       <input
+                        ref={captionRef}
                         type='text'
                         className='border-none focus:ring-0 w-full text-center'
                         placeholder='Please enter a caption...'
@@ -105,10 +154,12 @@ const Modal = () => {
                 </div>
                 <div className='mt-5'>
                   <button
+                    onClick={uploadPost}
+                    disabled={!selectedFile || loading}
                     type='button'
-                    className='w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:text-sm'
+                    className='w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:text-sm disabled:cursor-not-allowed disabled:hover:bg-gray-300 disabled:bg-gray-300'
                   >
-                    Upload post
+                    {loading ? 'Uploading image...' : 'Upload post!'}
                   </button>
                 </div>
               </div>
