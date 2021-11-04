@@ -36,6 +36,7 @@ const signIn = ({ providers }) => {
 // This is the recommended way for Next.js 9.3 or newer
 export async function getServerSideProps() {
   const providers = await getProviders()
+
   return {
     props: { providers },
   }
