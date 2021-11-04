@@ -21,8 +21,8 @@ import {
 } from '@firebase/firestore'
 import { useState, useEffect } from 'react'
 import { db } from '../firebase'
-
 import Moment from 'react-moment'
+import Image from 'next/image'
 
 const Post = ({ id, username, avatar, img, caption }) => {
   const { data: session } = useSession()
@@ -95,7 +95,15 @@ const Post = ({ id, username, avatar, img, caption }) => {
         <DotsHorizontalIcon className='h-5 cursor-pointer' />
       </div>
 
-      <img src={img} alt='image' className='object-cover w-full' />
+      <div className='relative w-full h-72 sm:h-96'>
+        <Image src={img} layout='fill' objectFit='contain' />
+      </div>
+
+      {/* <img
+        src={img}
+        alt='image'
+        className='object-cover w-full'
+      /> */}
 
       {/* buttons */}
       {session && (
